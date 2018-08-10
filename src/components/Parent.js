@@ -10,14 +10,18 @@ export default class Parent extends Component {
     this.state = {
       stuff: [],
       userInput: '',
+      whatThing: 0,
+      playListName: '',
+      playlists: []
     };
     // each of our methods below must be bound to the correct instance of our parent class, otherwise we will lose our context
     this.addStuff = this.addStuff.bind(this);
     this.deleteStuff = this.deleteStuff.bind(this);
     this.hangleInput = this.hangleInput.bind(this);
+    this.clickerThingAmabob = this.clickerThingAmabob.bind(this);
   };
 
-  // when Parent first mounts it will send a request to our server for the stuff data >> when we get our response we set it on our state
+  // when Parent first mounts it will send a request to our server for the stuff data >> when we get our response we set it on our= state
   componentDidMount() {
     axios
       .get('/api/stuff')
@@ -25,6 +29,14 @@ export default class Parent extends Component {
         this.setState({
           stuff: response.data,
         });
+      });
+    axios
+      .get('/api/playlists')
+      .then(response => {
+        // console.log(response);
+        this.setState({
+          playlists: response.data
+        })
       });
   };
 
@@ -60,6 +72,20 @@ export default class Parent extends Component {
     });
   };
 
+  clickerThingAmabob() {
+    axios.put(`/api/stuff/${this.state.whatThing}`, { fish: 'slimy' })
+  }
+
+
+  updateName(id) {
+    let theBodyThatIsGoingToGetPlacedOnTheRequest = { id: id, name: this.state.playListName }
+
+    axios
+      .put('/api/playlist', theBodyThatIsGoingToGetPlacedOnTheRequest)
+      .then(response => {
+        console.log(response)
+      })
+  }
 
   render() {
     console.log(this.state.userInput) // this is a great place to console log properties on state to see that they exist or are being changed correctly
@@ -75,6 +101,10 @@ export default class Parent extends Component {
         );
       });
 
+    let playlists = this.state.playlists.map(playlist => {
+      return <div key={playlist.id}>{playlist.name}</div>
+    });
+
     return (
       <div>
         <div>{this.state.greeting}</div>
@@ -83,7 +113,15 @@ export default class Parent extends Component {
         {/* we are passing this child the addStuff method and buttonName on props */}
         <Child method={this.addStuff} buttonName="addStuff" />
 
+        <input onChange={e => this.setState({ whatThing: e.target.value })} />
+        <button onClick={this.clickerThingAmabob}>Click me!</button>
+
         <div className="all-the-stuff">{allTheStuff}</div>
+
+        <input onChange={e => this.setState({ playListName: e.target.value })} />
+        <button onClick={() => this.updateName(4)}>Change that Playist!</button>
+
+        {playlists}m
       </div>
     );
   };
